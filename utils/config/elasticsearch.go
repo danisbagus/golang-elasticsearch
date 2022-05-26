@@ -30,8 +30,6 @@ func GetESClient() *elasticsearch.Client {
 	es, err := elasticsearch.NewClient(cfg)
 	if err != nil {
 		log.Printf("Error creating the client: %s", err)
-	} else {
-		log.Println(es.Info())
 	}
 
 	return es
