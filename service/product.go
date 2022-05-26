@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"errors"
 
 	"github.com/danisbagus/golang-elasticsearch/model"
 	"github.com/google/uuid"
@@ -12,6 +13,7 @@ import (
 type IProductService interface {
 	Insert(ctx context.Context, product *model.Product) (*model.Product, error)
 	Update(ctx context.Context, product *model.Product) error
+	View(ctx context.Context, ID string) (*model.Product, error)
 }
 
 type ProductService struct {
@@ -39,4 +41,17 @@ func (s *ProductService) Update(ctx context.Context, product *model.Product) err
 		return err
 	}
 	return nil
+}
+
+func (s *ProductService) View(ctx context.Context, ID string) (*model.Product, error) {
+	product, err := s.repo.FetchOne(ctx, ID)
+	if err != nil {
+		return nil, err
+	}
+
+	if product.ID == "" {
+		return nil, errors.New("not found")
+	}
+
+	return product, nil
 }

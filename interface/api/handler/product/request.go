@@ -10,3 +10,10 @@ type ProductRequest struct {
 type ProductResponse struct {
 	ID string `json:"id"`
 }
+
+type ViewResponse struct {
+	ID       string `json:"id"`
+	Name     string `json:"name"`
+	Category string `json:"category"`
+	Price    int64  `json:"price"`
+}

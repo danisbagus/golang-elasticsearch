@@ -58,3 +58,19 @@ func (s *ProductHandler) Update(c echo.Context) error {
 
 	return c.JSON(http.StatusCreated, map[string]interface{}{"message": "successfully update product", "data": product})
 }
+
+func (s *ProductHandler) View(c echo.Context) error {
+	productID := c.Param("id")
+	resProduct, err := s.service.View(c.Request().Context(), productID)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+	}
+
+	response := new(product.ViewResponse)
+	response.ID = resProduct.ID
+	response.Name = resProduct.Name
+	response.Category = resProduct.Category
+	response.Price = resProduct.Price
+
+	return c.JSON(http.StatusCreated, map[string]interface{}{"message": "successfully get product", "data": response})
+}

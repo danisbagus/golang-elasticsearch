@@ -24,6 +24,7 @@ type document struct {
 type IProductRepo interface {
 	Insert(ctx context.Context, product *model.Product) error
 	Update(ctx context.Context, product *model.Product) error
+	FetchOne(ctx context.Context, id string) (*model.Product, error)
 }
 
 type ProductRepo struct {
@@ -92,4 +93,36 @@ func (r *ProductRepo) Update(ctx context.Context, product *model.Product) error 
 	}
 
 	return nil
+}
+
+func (r *ProductRepo) FetchOne(ctx context.Context, id string) (*model.Product, error) {
+	req := esapi.GetRequest{
+		Index:      IndexName,
+		DocumentID: id,
+	}
+
+	ctx, cancel := context.WithTimeout(ctx, TimeOut)
+	defer cancel()
+
+	res, err := req.Do(ctx, r.es)
+	if err != nil {
+		return nil, fmt.Errorf("[FetchOne] request: %w", err)
+	}
+	defer res.Body.Close()
+
+	if res.IsError() {
+		return nil, fmt.Errorf("[FetchOne] response: %s", res.String())
+	}
+
+	product := new(model.Product)
+	var (
+		body document
+	)
+	body.Source = &product
+
+	if err := json.NewDecoder(res.Body).Decode(&body); err != nil {
+		return nil, fmt.Errorf("[FetchOne] decode: %w", err)
+	}
+
+	return product, nil
 }
