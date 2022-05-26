@@ -84,3 +84,15 @@ func (s *ProductHandler) Delete(c echo.Context) error {
 
 	return c.JSON(http.StatusCreated, map[string]interface{}{"message": "successfully delete product", "data": nil})
 }
+
+func (s *ProductHandler) SearchName(c echo.Context) error {
+	key := "name"
+	value := c.QueryParam("q")
+
+	products, err := s.service.Search(c.Request().Context(), key, value)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+	}
+
+	return c.JSON(http.StatusCreated, map[string]interface{}{"message": "successfully get product", "data": products})
+}

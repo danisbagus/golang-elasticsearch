@@ -15,6 +15,7 @@ type IProductService interface {
 	Update(ctx context.Context, product *model.Product) error
 	View(ctx context.Context, ID string) (*model.Product, error)
 	Delete(ctx context.Context, ID string) error
+	Search(ctx context.Context, key string, value string) ([]model.Product, error)
 }
 
 type ProductService struct {
@@ -63,4 +64,12 @@ func (s *ProductService) Delete(ctx context.Context, ID string) error {
 		return err
 	}
 	return nil
+}
+
+func (s *ProductService) Search(ctx context.Context, key string, value string) ([]model.Product, error) {
+	products, err := s.repo.Search(ctx, key, value)
+	if err != nil {
+		return nil, err
+	}
+	return products, nil
 }

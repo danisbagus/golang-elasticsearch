@@ -20,5 +20,6 @@ func API(route *echo.Group) {
 	productRoute.GET("/:id", productHandler.View)
 	productRoute.PUT("/:id", productHandler.Update)
 	productRoute.DELETE("/:id", productHandler.Delete)
+	productRoute.GET("/search", productHandler.SearchName)
 
 }

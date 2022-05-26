@@ -26,6 +26,7 @@ type IProductRepo interface {
 	Update(ctx context.Context, product *model.Product) error
 	FetchOne(ctx context.Context, ID string) (*model.Product, error)
 	Delete(ctx context.Context, ID string) error
+	Search(ctx context.Context, key string, value string) ([]model.Product, error)
 }
 
 type ProductRepo struct {
@@ -144,8 +145,63 @@ func (r *ProductRepo) Delete(ctx context.Context, ID string) error {
 	defer res.Body.Close()
 
 	if res.IsError() {
-		return fmt.Errorf("[Delete]: response: %s", res.String())
+		return fmt.Errorf("[Delete] response: %s", res.String())
 	}
 
 	return nil
+}
+
+func (r *ProductRepo) Search(ctx context.Context, key string, value string) ([]model.Product, error) {
+	products := make([]model.Product, 0)
+	mapResp := make(map[string]interface{})
+
+	var buf bytes.Buffer
+	query := map[string]interface{}{
+		"query": map[string]interface{}{
+			"match": map[string]interface{}{
+				key: value,
+			},
+		},
+	}
+
+	if err := json.NewEncoder(&buf).Encode(query); err != nil {
+		return nil, fmt.Errorf("[Search] encode  %s", err)
+	}
+
+	ctx, cancel := context.WithTimeout(ctx, TimeOut)
+	defer cancel()
+
+	req := esapi.SearchRequest{
+		Index:          []string{IndexName},
+		Body:           &buf,
+		TrackTotalHits: true,
+		Pretty:         true,
+	}
+
+	res, err := req.Do(ctx, r.es)
+	if err != nil {
+		return nil, fmt.Errorf("[Search] request: %w", err)
+	}
+	defer res.Body.Close()
+
+	if res.IsError() {
+		return nil, fmt.Errorf("[Search] response: %s", res.String())
+	}
+
+	if err := json.NewDecoder(res.Body).Decode(&mapResp); err != nil {
+		return nil, fmt.Errorf("[Search] decode: %s", err)
+	}
+
+	for _, hit := range mapResp["hits"].(map[string]interface{})["hits"].([]interface{}) {
+		product := model.Product{}
+		doc := hit.(map[string]interface{})
+		source := doc["_source"]
+
+		byteData, _ := json.Marshal(source)
+		json.Unmarshal(byteData, &product)
+		products = append(products, product)
+
+	}
+
+	return products, nil
 }
