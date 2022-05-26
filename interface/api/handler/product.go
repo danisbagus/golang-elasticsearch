@@ -56,7 +56,7 @@ func (s *ProductHandler) Update(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
 
-	return c.JSON(http.StatusCreated, map[string]interface{}{"message": "successfully update product", "data": product})
+	return c.JSON(http.StatusOK, map[string]interface{}{"message": "successfully update product", "data": product})
 }
 
 func (s *ProductHandler) View(c echo.Context) error {
@@ -72,5 +72,15 @@ func (s *ProductHandler) View(c echo.Context) error {
 	response.Category = resProduct.Category
 	response.Price = resProduct.Price
 
-	return c.JSON(http.StatusCreated, map[string]interface{}{"message": "successfully get product", "data": response})
+	return c.JSON(http.StatusOK, map[string]interface{}{"message": "successfully get product", "data": response})
+}
+
+func (s *ProductHandler) Delete(c echo.Context) error {
+	productID := c.Param("id")
+	err := s.service.Delete(c.Request().Context(), productID)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+	}
+
+	return c.JSON(http.StatusCreated, map[string]interface{}{"message": "successfully delete product", "data": nil})
 }

@@ -14,6 +14,7 @@ type IProductService interface {
 	Insert(ctx context.Context, product *model.Product) (*model.Product, error)
 	Update(ctx context.Context, product *model.Product) error
 	View(ctx context.Context, ID string) (*model.Product, error)
+	Delete(ctx context.Context, ID string) error
 }
 
 type ProductService struct {
@@ -54,4 +55,12 @@ func (s *ProductService) View(ctx context.Context, ID string) (*model.Product, e
 	}
 
 	return product, nil
+}
+
+func (s *ProductService) Delete(ctx context.Context, ID string) error {
+	err := s.repo.Delete(ctx, ID)
+	if err != nil {
+		return err
+	}
+	return nil
 }

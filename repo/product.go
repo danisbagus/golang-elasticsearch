@@ -24,7 +24,8 @@ type document struct {
 type IProductRepo interface {
 	Insert(ctx context.Context, product *model.Product) error
 	Update(ctx context.Context, product *model.Product) error
-	FetchOne(ctx context.Context, id string) (*model.Product, error)
+	FetchOne(ctx context.Context, ID string) (*model.Product, error)
+	Delete(ctx context.Context, ID string) error
 }
 
 type ProductRepo struct {
@@ -95,10 +96,10 @@ func (r *ProductRepo) Update(ctx context.Context, product *model.Product) error 
 	return nil
 }
 
-func (r *ProductRepo) FetchOne(ctx context.Context, id string) (*model.Product, error) {
+func (r *ProductRepo) FetchOne(ctx context.Context, ID string) (*model.Product, error) {
 	req := esapi.GetRequest{
 		Index:      IndexName,
-		DocumentID: id,
+		DocumentID: ID,
 	}
 
 	ctx, cancel := context.WithTimeout(ctx, TimeOut)
@@ -125,4 +126,26 @@ func (r *ProductRepo) FetchOne(ctx context.Context, id string) (*model.Product, 
 	}
 
 	return product, nil
+}
+
+func (r *ProductRepo) Delete(ctx context.Context, ID string) error {
+	req := esapi.DeleteRequest{
+		Index:      IndexName,
+		DocumentID: ID,
+	}
+
+	ctx, cancel := context.WithTimeout(ctx, TimeOut)
+	defer cancel()
+
+	res, err := req.Do(ctx, r.es)
+	if err != nil {
+		return fmt.Errorf("[Delete] request: %w", err)
+	}
+	defer res.Body.Close()
+
+	if res.IsError() {
+		return fmt.Errorf("[Delete]: response: %s", res.String())
+	}
+
+	return nil
 }
