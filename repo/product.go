@@ -17,8 +17,13 @@ const (
 	TimeOut   = time.Second * 15
 )
 
+type document struct {
+	Source interface{} `json:"_source"`
+}
+
 type IProductRepo interface {
 	Insert(ctx context.Context, product *model.Product) error
+	Update(ctx context.Context, product *model.Product) error
 }
 
 type ProductRepo struct {
@@ -55,6 +60,35 @@ func (r *ProductRepo) Insert(ctx context.Context, product *model.Product) error 
 
 	if res.IsError() {
 		return fmt.Errorf("[Insert]: response: %s", res.String())
+	}
+
+	return nil
+}
+
+func (r *ProductRepo) Update(ctx context.Context, product *model.Product) error {
+	body, err := json.Marshal(product)
+	if err != nil {
+		return fmt.Errorf("[Update]: marshall data: %w", err)
+	}
+
+	req := esapi.UpdateRequest{
+		Index:      IndexName,
+		DocumentID: product.ID,
+		Body:       bytes.NewReader([]byte(fmt.Sprintf(`{"doc":%s}`, body))),
+	}
+
+	ctx, cancel := context.WithTimeout(ctx, TimeOut)
+	defer cancel()
+
+	res, err := req.Do(ctx, r.es)
+	if err != nil {
+		return fmt.Errorf("[Update] request: %w", err)
+	}
+
+	defer res.Body.Close()
+
+	if res.IsError() {
+		return fmt.Errorf("[Update]: response: %s", res.String())
 	}
 
 	return nil

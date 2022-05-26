@@ -11,6 +11,7 @@ import (
 
 type IProductService interface {
 	Insert(ctx context.Context, product *model.Product) (*model.Product, error)
+	Update(ctx context.Context, product *model.Product) error
 }
 
 type ProductService struct {
@@ -30,4 +31,12 @@ func (s *ProductService) Insert(ctx context.Context, product *model.Product) (*m
 		return nil, err
 	}
 	return product, nil
+}
+
+func (s *ProductService) Update(ctx context.Context, product *model.Product) error {
+	err := s.repo.Update(ctx, product)
+	if err != nil {
+		return err
+	}
+	return nil
 }

@@ -21,7 +21,6 @@ func NewProduct(service service.IProductService) *ProductHandler {
 }
 
 func (s *ProductHandler) Insert(c echo.Context) error {
-
 	request := new(product.ProductRequest)
 	if err := c.Bind(request); err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
@@ -38,4 +37,24 @@ func (s *ProductHandler) Insert(c echo.Context) error {
 	}
 
 	return c.JSON(http.StatusCreated, map[string]interface{}{"message": "successfully create product", "data": res})
+}
+
+func (s *ProductHandler) Update(c echo.Context) error {
+	request := new(product.ProductRequest)
+	if err := c.Bind(request); err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+	}
+
+	product := new(model.Product)
+	product.ID = c.Param("id")
+	product.Name = request.Name
+	product.Category = request.Category
+	product.Price = request.Price
+
+	err := s.service.Update(c.Request().Context(), product)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+	}
+
+	return c.JSON(http.StatusCreated, map[string]interface{}{"message": "successfully update product", "data": product})
 }
